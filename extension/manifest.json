@@ -1,8 +1,15 @@
 {
   "manifest_version": 3,
+  "minimum_chrome_version": "111",
   "name": "Ritmo Shopee",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Compare vendas e idade de anúncios da Shopee, com indicação da origem dos dados.",
   "permissions": ["activeTab", "scripting"],
+  "content_scripts": [{
+    "matches": ["https://shopee.com.br/*", "https://www.shopee.com.br/*"],
+    "js": ["capture.js"],
+    "run_at": "document_start",
+    "world": "MAIN"
+  }],
   "action": { "default_title": "Analisar anúncio", "default_popup": "popup.html" }
 }
