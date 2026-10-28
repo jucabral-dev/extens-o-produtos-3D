@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Ritmo Shopee</title><link rel="stylesheet" href="popup.css"></head>
+<body>
+  <header><span class="eyebrow">ANÁLISE DE PRODUTO</span><h1>Ritmo Shopee <span class="badge">BETA</span></h1><p>Compare o volume de vendas com o tempo do anúncio.</p></header>
+  <section class="context"><strong id="title">Lendo a página…</strong><p id="status" role="status"></p><button id="refresh" type="button" class="secondary">Ler anúncio novamente</button></section>
+  <section class="dashboard" aria-label="Indicadores do anúncio" aria-live="polite">
+    <article class="metric orange"><span>Itens vendidos</span><strong id="total">Indisponível</strong><small id="total-source">Sem dados confirmados</small></article>
+    <article class="metric blue"><span>Estoque</span><strong id="stock-value">Indisponível</strong><small id="stock-source">Não coletado automaticamente</small></article>
+    <article class="metric"><span>Visitas acumuladas</span><strong id="visits-value">Indisponível</strong><small>Informação opcional</small></article>
+    <article class="metric"><span>Visitas por item vendido</span><strong id="per-sale">Indisponível</strong><small>Visitas ÷ itens vendidos</small></article>
+    <article class="metric"><span>Itens / visitas</span><strong id="conversion">Indisponível</strong><small>Não representa conversão por pedidos</small></article>
+    <article class="metric green"><span>Criado em</span><strong id="created-value">Indisponível</strong><small id="age">Data real ainda desconhecida</small></article>
+    <article class="metric"><span>Atualizado em</span><strong id="updated-value">Indisponível</strong><small id="updated-source">Não coletado automaticamente</small></article>
+    <article class="metric green"><span>Média histórica de vendas</span><strong id="daily">Indisponível</strong><small id="monthly">Precisa das vendas totais e criação</small></article>
+  </section>
+  <p class="note">As médias usam toda a idade do anúncio. Elas não mostram as vendas dos últimos 30 dias e não garantem demanda ou lucro.</p>
+  <details open><summary>Informar ou confirmar dados</summary>
+  <form id="analysis">
+    <div class="fields">
+      <div><label for="sales">Total de itens vendidos</label><input id="sales" type="text" inputmode="numeric" placeholder="Ex.: 1000" required aria-describedby="sales-help"><small id="sales-help">Total acumulado, não vendas do mês. Valores como “1mil+” são arredondados.</small></div>
+      <div><label for="created">Criação do anúncio</label><input id="created" type="date" required aria-describedby="date-help"><small id="date-help">Use a data real. Primeira avaliação não é a data de criação.</small></div>
+      <div><label for="stock">Estoque <span>(opcional)</span></label><input id="stock" type="text" inputmode="numeric" placeholder="Não disponível"></div>
+      <div><label for="visits">Visitas totais <span>(opcional)</span></label><input id="visits" type="text" inputmode="numeric" placeholder="Não disponível" aria-describedby="visits-help"><small id="visits-help">Use visitas acumuladas do mesmo anúncio e período das vendas.</small></div>
+      <div><label for="updated">Última atualização <span>(opcional)</span></label><input id="updated" type="date"><small>Alteração real do anúncio, não a data desta consulta.</small></div>
+    </div>
+    <button type="submit">Atualizar análise</button>
+  </form></details>
+  <p id="error" role="alert" hidden></p>
+  <p id="basis" class="note" role="status">A data de criação ainda não é coletada automaticamente. Campos sem fonte ficam indisponíveis.</p>
+  <footer>Processamento local · Sem login · Dados não são armazenados</footer>
+  <script type="module" src="popup.js"></script>
+</body></html>
