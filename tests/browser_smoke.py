@@ -24,7 +24,7 @@ try:
         page.on('pageerror', lambda error: errors.append(str(error)))
         page.clock.set_fixed_time('2026-10-28T12:00:00Z')
         # Este teste de popup simula a API do Chrome. O leitor é exercitado abaixo.
-        page.add_init_script("""window.chrome={tabs:{query:async()=>[{id:1,url:'https://shopee.com.br/product/568119744/23393493780'}]},scripting:{executeScript:async()=>[{result:{title:'Produto de teste',sales:300,soldLabel:'300',salesPeriod:'lifetime',stock:50,views:3000,creationDate:'2026-09-28',updatedDate:'2026-10-20',sources:{sales:'Shopee',creationDate:'Shopee',stock:'Shopee',views:'Shopee',updatedDate:'Shopee'},diagnostics:{version:'0.3.0'}}}]}}""")
+        page.add_init_script("""window.chrome={tabs:{query:async()=>[{id:1,url:'https://shopee.com.br/product/568119744/23393493780'}]},scripting:{executeScript:async()=>[{result:{title:'Produto de teste',sales:300,soldLabel:'300',salesPeriod:'lifetime',stock:50,views:3000,creationDate:'2026-09-28',updatedDate:'2026-10-20',sources:{sales:'Shopee',creationDate:'Shopee',stock:'Shopee',views:'Shopee',updatedDate:'Shopee'},diagnostics:{version:'0.4.0'}}}]}}""")
         page.goto(f'http://127.0.0.1:{server.server_port}/popup.html')
         page.wait_for_function("document.getElementById('daily').textContent === '10 / dia'")
         assert '300 a cada 30 dias' in page.locator('#monthly').inner_text()
@@ -32,9 +32,23 @@ try:
         assert page.locator('#stock-value').inner_text() == '50'
         assert page.locator('#created-value').inner_text() == '28/09/2026'
         assert page.locator('#updated-value').inner_text() == '20/10/2026'
+        assert page.locator('#demand-value').inner_text() == 'Meta atingida'
+        page.locator('#demand-target').fill('11')
+        assert page.locator('#demand-value').inner_text() == 'Abaixo da meta'
+        assert 'histórica' in page.locator('#demand-basis').inner_text()
+        for key,value in {'price':'50,00','cost':'15','percent':'20','fixed':'4','other':'3'}.items():
+            page.locator('#profit-'+key).fill(value)
+        page.get_by_role('button', name='Calcular lucro').click()
+        assert '18,00' in page.locator('#profit-value').inner_text()
+        assert '36%' in page.locator('#profit-margin').inner_text()
+        page.locator('#profit-price').fill('10')
+        assert page.locator('#profit-result').is_hidden()
+        page.get_by_role('button', name='Calcular lucro').click()
+        assert 'Prejuízo' in page.locator('#profit-value').inner_text()
         page.locator('summary').click()
         page.locator('#sales').fill('1mil')
         assert page.locator('#daily').inner_text() == 'Indisponível'
+        assert page.locator('#demand-value').inner_text() == 'Dados insuficientes'
         page.get_by_role('button', name='Atualizar análise').click()
         assert page.locator('#error').is_visible()
         page.get_by_role('button', name='Ler anúncio novamente').click()

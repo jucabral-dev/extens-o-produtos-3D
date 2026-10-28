@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { analyze, analyzeExtras } from '../extension/analysis.js';
+import { analyze, analyzeExtras, estimateDemand, calculateProfit } from '../extension/analysis.js';
 const now = new Date(2026, 9, 28, 12);
 test('compares sales over the actual lifetime rather than totals alone', () => {
   const recent = analyze('300', '2026-09-28', now);
@@ -40,4 +40,33 @@ test('validates optional counts and update dates', () => {
   const result = analyze('500', '2026-09-28', now);
   for (const fields of [{stock:'-1'}, {visits:'1mil'}, {updated:'2026-09-27'}, {updated:'2026-10-29'}]) assert.throws(() => analyzeExtras(fields, result, now));
   assert.equal(analyzeExtras({updated:'2026-10-10'}, result, now).updated, '2026-10-10');
+});
+test('demand compares historical pace to a configurable target', () => {
+  assert.equal(estimateDemand(10, '1').label, 'Meta atingida');
+  assert.equal(estimateDemand(10, '11').label, 'Abaixo da meta');
+  assert.equal(estimateDemand(0, '1').label, 'Sem vendas registradas');
+  assert.equal(estimateDemand(0.5, '0,50').label, 'Meta atingida');
+});
+test('missing demand is not represented as no sales', () => {
+  assert.equal(estimateDemand(null).label, 'Dados insuficientes');
+  for (const target of ['0','-1','','1mil']) assert.throws(() => estimateDemand(10, target));
+});
+test('profit includes percentage fee, fixed fee, product and other unit costs', () => {
+  const result = calculateProfit({ price:'50,00', cost:'15', percentFee:'20', fixedFee:'4', otherCosts:'3' });
+  assert.equal(result.profitCents, 1800);
+  assert.equal(result.margin, 0.36);
+  assert.equal(result.totalCostCents, 3200);
+});
+test('profit preserves losses and handles zero margin', () => {
+  assert.equal(calculateProfit({ price:'10', cost:'10', percentFee:'20', fixedFee:'4' }).profitCents, -600);
+  assert.equal(calculateProfit({ price:'10', cost:'0', percentFee:'100', fixedFee:'0' }).profitCents, 0);
+});
+test('percentage fees are rounded to cents, not rounded to whole reais', () => {
+  const result = calculateProfit({ price:'20.50', cost:'0', percentFee:'12,5', fixedFee:'0' });
+  assert.equal(result.percentageFeeCents, 256);
+  assert.equal(result.profitCents, 1794);
+});
+test('profit requires applicable fees explicitly, without presuming Shopee rates', () => {
+  const fields = { price:'50', cost:'15', percentFee:'20', fixedFee:'4' };
+  for (const update of [{price:'0'}, {cost:'-1'}, {percentFee:''}, {fixedFee:''}, {percentFee:'100.01'}, {price:'1.000'}, {otherCosts:'NaN'}]) assert.throws(() => calculateProfit({...fields,...update}));
 });

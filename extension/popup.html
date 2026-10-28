@@ -14,6 +14,31 @@
     <article class="metric"><span>Atualizado em</span><strong id="updated-value">Indisponível</strong><small id="updated-source">Não coletado automaticamente</small></article>
     <article class="metric green"><span>Média histórica de vendas</span><strong id="daily">Indisponível</strong><small id="monthly">Precisa das vendas totais e criação</small></article>
   </section>
+  <section class="tool" aria-labelledby="demand-heading">
+    <h2 id="demand-heading">Demanda estimada</h2>
+    <p class="note">Compare o ritmo histórico deste anúncio com a sua meta de vendas. Isso não mede a demanda atual de todo o mercado.</p>
+    <label for="demand-target">Sua meta mínima de itens por dia</label>
+    <input id="demand-target" type="text" inputmode="decimal" value="1" aria-describedby="demand-help">
+    <small id="demand-help">Meta inicial: 1 item/dia. Ajuste conforme seu objetivo.</small>
+    <div class="estimate" aria-live="polite"><strong id="demand-value">Dados insuficientes</strong><p id="demand-basis">Precisa das vendas acumuladas e da criação do anúncio.</p></div>
+    <p id="demand-error" role="alert" hidden></p>
+  </section>
+  <section class="tool" aria-labelledby="profit-heading">
+    <h2 id="profit-heading">Lucro estimado por unidade</h2>
+    <p class="note">Informe os seus custos e as taxas aplicáveis à sua conta. Nenhuma taxa da Shopee é presumida.</p>
+    <form id="profit-form">
+      <div class="fields">
+        <div><label for="profit-price">Preço de venda (R$)</label><input id="profit-price" type="text" inputmode="decimal" placeholder="Ex.: 50,00" required></div>
+        <div><label for="profit-cost">Custo do produto (R$)</label><input id="profit-cost" type="text" inputmode="decimal" placeholder="Ex.: 15,00" required><small>Inclua material, energia e mão de obra.</small></div>
+        <div><label for="profit-percent">Taxa sobre a venda (%)</label><input id="profit-percent" type="text" inputmode="decimal" placeholder="Sua taxa percentual" required></div>
+        <div><label for="profit-fixed">Tarifa fixa por unidade (R$)</label><input id="profit-fixed" type="text" inputmode="decimal" placeholder="Informe 0 se não houver" required></div>
+        <div class="full"><label for="profit-other">Outros custos por unidade (R$)</label><input id="profit-other" type="text" inputmode="decimal" placeholder="Opcional; vazio considera R$ 0"><small>Some embalagem, frete pago por você, anúncios e impostos não incluídos acima. Use valores sem separador de milhar.</small></div>
+      </div>
+      <button type="submit">Calcular lucro</button>
+    </form>
+    <p id="profit-error" role="alert" hidden></p>
+    <div id="profit-result" class="estimate" aria-live="polite" hidden><strong id="profit-value"></strong><p id="profit-margin"></p><p id="profit-breakdown"></p><small>Estimativa por unidade, considerando apenas os custos informados. Não é projeção das suas vendas.</small></div>
+  </section>
   <p class="note">As médias usam toda a idade do anúncio. Elas não mostram as vendas dos últimos 30 dias e não garantem demanda ou lucro.</p>
   <details><summary>Dados manuais (opcional)</summary>
   <form id="analysis">
@@ -30,6 +55,6 @@
   <p id="basis" class="note" role="status">Buscando dados do anúncio…</p>
   <button id="diagnostic" class="secondary" type="button">Copiar diagnóstico da leitura</button>
   <textarea id="diagnostic-text" aria-label="Diagnóstico para copiar" rows="6" readonly hidden></textarea>
-  <footer>v0.3.0 · Processamento local · Sem envio a terceiros</footer>
+  <footer>v0.4.0 · Processamento local · Sem envio a terceiros</footer>
   <script type="module" src="popup.js"></script>
 </body></html>

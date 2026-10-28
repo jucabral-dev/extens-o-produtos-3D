@@ -1,4 +1,4 @@
-import { analyze, analyzeExtras } from './analysis.js';
+import { analyze, analyzeExtras, estimateDemand, calculateProfit } from './analysis.js';
 import { extractListing } from './extract.js';
 const $ = id => document.getElementById(id);
 const format = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 });
@@ -6,9 +6,26 @@ const dateFormat = value => value.split('-').reverse().join('/');
 const today = new Date();
 const maxDate = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
 for (const id of ['created', 'updated']) $(id).max = maxDate;
-let diagnostic = { version: '0.3.0', status: 'aguardando leitura' };
+let diagnostic = { version: '0.4.0', status: 'aguardando leitura' };
 let reading = false;
+let demandDaily = null;
+const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+function renderDemand() {
+  $('demand-error').hidden = true;
+  try {
+    const demand = estimateDemand(demandDaily, $('demand-target').value);
+    $('demand-value').textContent = demand.label;
+    $('demand-basis').textContent = demand.daily === null ? 'Precisa das vendas acumuladas e da criação do anúncio, com pelo menos um dia de idade.' : `${format.format(demand.daily)} itens/dia na média histórica · sua meta: ${format.format(demand.target)} itens/dia. Não indica vendas recentes nem garante vendas para um novo anúncio.`;
+  } catch (error) {
+    $('demand-value').textContent = 'Meta inválida';
+    $('demand-basis').textContent = 'Ajuste sua meta para comparar com o ritmo histórico.';
+    $('demand-error').textContent = error.message;
+    $('demand-error').hidden = false;
+  }
+}
 function clearAnalysis() {
+  demandDaily = null;
+  renderDemand();
   for (const id of ['total','stock-value','visits-value','per-sale','conversion','created-value','updated-value','daily']) $(id).textContent = 'Indisponível';
   $('total-source').textContent = 'Não fornecido nesta leitura';
   $('stock-source').textContent = 'Não fornecido nesta leitura';
@@ -47,6 +64,8 @@ function render(data, manual = false) {
   const lifetime = manual || data.salesPeriod === 'lifetime';
   if (data.sales !== null && data.creationDate && lifetime) {
     const result = analyze(String(data.sales), data.creationDate);
+    demandDaily = result.daily;
+    renderDemand();
     $('daily').textContent = result.daily === null ? 'Sem dia completo' : `${format.format(result.daily)} / dia`;
     $('monthly').textContent = result.daily === null ? 'Média ainda indisponível' : `${format.format(result.daily * 30)} a cada 30 dias · média histórica`;
   }
@@ -58,6 +77,8 @@ function render(data, manual = false) {
 }
 async function readPage() {
   reading = true;
+  $('profit-result').hidden = true;
+  $('profit-error').hidden = true;
   $('refresh').disabled = true;
   $('analysis').reset();
   clearAnalysis();
@@ -79,7 +100,7 @@ async function readPage() {
       if (value !== null && value !== undefined) $(id).value = String(value);
     }
   } catch (error) {
-    diagnostic = { version: '0.3.0', error: error.message };
+    diagnostic = { version: '0.4.0', error: error.message };
     $('title').textContent = 'Não foi possível analisar esta aba';
     $('status').textContent = error.message;
   } finally {
@@ -117,5 +138,26 @@ $('diagnostic').addEventListener('click', async () => {
     $('diagnostic-text').select();
     $('diagnostic').textContent = 'Selecione e copie o diagnóstico abaixo';
   }
+});
+$('demand-target').addEventListener('input', renderDemand);
+$('profit-form').addEventListener('submit', event => {
+  event.preventDefault();
+  $('profit-error').hidden = true;
+  $('profit-result').hidden = true;
+  try {
+    const result = calculateProfit({ price: $('profit-price').value, cost: $('profit-cost').value, percentFee: $('profit-percent').value, fixedFee: $('profit-fixed').value, otherCosts: $('profit-other').value });
+    $('profit-result').classList.toggle('loss', result.profitCents < 0);
+    $('profit-value').textContent = `${result.profitCents < 0 ? 'Prejuízo' : result.profitCents === 0 ? 'Equilíbrio' : 'Lucro'}: ${currency.format(result.profitCents / 100)}`;
+    $('profit-margin').textContent = `Margem sobre o preço: ${format.format(result.margin * 100)}%.`;
+    $('profit-breakdown').textContent = `Venda: ${currency.format(result.priceCents / 100)} − produto: ${currency.format(result.costCents / 100)} − taxa percentual: ${currency.format(result.percentageFeeCents / 100)} − tarifa fixa: ${currency.format(result.fixedCents / 100)} − outros: ${currency.format(result.otherCents / 100)}.`;
+    $('profit-result').hidden = false;
+  } catch (error) {
+    $('profit-error').textContent = error.message;
+    $('profit-error').hidden = false;
+  }
+});
+for (const id of ['profit-price','profit-cost','profit-percent','profit-fixed','profit-other']) $(id).addEventListener('input', () => {
+  $('profit-result').hidden = true;
+  $('profit-error').hidden = true;
 });
 await readPage();

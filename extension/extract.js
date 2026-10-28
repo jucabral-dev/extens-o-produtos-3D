@@ -9,7 +9,7 @@ export async function extractListing() {
     url: `${location.origin}/product/${shopId}/${itemId}`,
     sales: null, salesPeriod: null, soldLabel: null, stock: null, views: null,
     creationDate: null, updatedDate: null, sources: {},
-    diagnostics: { version: '0.3.0', shopId, itemId, api: [], observedResponse: false },
+    diagnostics: { version: '0.4.0', shopId, itemId, api: [], observedResponse: false },
     warning: null
   };
   const integer = value => (typeof value === 'number' || typeof value === 'string' && /^\d+$/.test(value)) && Number.isSafeInteger(Number(value)) && Number(value) >= 0 ? Number(value) : null;

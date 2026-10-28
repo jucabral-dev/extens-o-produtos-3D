@@ -31,3 +31,34 @@ export function analyzeExtras({ stock = '', visits = '', updated = '' }, result,
     itemsPerVisit: visitCount !== null && visitCount > 0 ? result.sales / visitCount : null
   };
 }
+
+// Valores monetários em centavos; ponto ou vírgula como separador decimal.
+function decimalHundredths(value, label) {
+  const text = String(value).trim();
+  if (!/^\d+(?:[.,]\d{1,2})?$/.test(text)) throw new Error(`${label}: informe um valor positivo ou zero, com até duas casas decimais e sem separador de milhar.`);
+  const [whole, fraction = ''] = text.replace(',', '.').split('.');
+  const amount = Number(whole) * 100 + Number(fraction.padEnd(2, '0'));
+  if (!Number.isSafeInteger(amount) || amount > 100_000_000_000) throw new Error(`${label}: valor muito alto.`);
+  return amount;
+}
+
+export function estimateDemand(daily, targetText = '1') {
+  const target = decimalHundredths(targetText, 'Meta diária') / 100;
+  if (target <= 0) throw new Error('A meta diária precisa ser maior que zero.');
+  if (daily === null || !Number.isFinite(daily) || daily < 0) return { label: 'Dados insuficientes', target, daily: null };
+  return { label: daily === 0 ? 'Sem vendas registradas' : daily >= target ? 'Meta atingida' : 'Abaixo da meta', target, daily };
+}
+
+export function calculateProfit({ price, cost, percentFee, fixedFee, otherCosts = '' }) {
+  const priceCents = decimalHundredths(price, 'Preço de venda');
+  if (priceCents === 0) throw new Error('O preço de venda precisa ser maior que zero.');
+  const costCents = decimalHundredths(cost, 'Custo do produto');
+  const feeBasisPoints = decimalHundredths(percentFee, 'Taxa percentual');
+  if (feeBasisPoints > 10_000) throw new Error('A taxa percentual não pode superar 100%.');
+  const fixedCents = decimalHundredths(fixedFee, 'Tarifa fixa');
+  const otherCents = String(otherCosts).trim() === '' ? 0 : decimalHundredths(otherCosts, 'Outros custos');
+  const percentageFeeCents = Math.round(priceCents * feeBasisPoints / 10_000);
+  const totalCostCents = costCents + percentageFeeCents + fixedCents + otherCents;
+  const profitCents = priceCents - totalCostCents;
+  return { priceCents, costCents, percentageFeeCents, fixedCents, otherCents, totalCostCents, profitCents, margin: profitCents / priceCents };
+}
